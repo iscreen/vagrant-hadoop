@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+{%if inventory_hostname in groups['hadoop-master'] %}
+  <property>
+    <name>mapreduce.framework.name</name>
+    <value>yarn</value>
+  </property>
+{% endif %}
+{%if inventory_hostname in groups['hadoop-node'] %}
+  <property>
+    <name>mapred.job.tracker</name>
+    <value>master:54311</value>
+  </property>
+{% endif %}
+</configuration>

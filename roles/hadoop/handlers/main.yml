@@ -1,0 +1,3 @@
+---
+- name: restart hadoop
+  service: name=hadoop state=restarted enabled=yes

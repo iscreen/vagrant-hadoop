@@ -1,0 +1,25 @@
+- name: set locale
+  locale_gen: name='zh_TW.UTF-8'
+
+- name: check current timezone
+  shell: cat /etc/timezone
+  register: current_zone
+  check_mode: no
+
+- name: set timezone
+  copy:
+    content: "{{ timezone }}"
+    dest: /etc/timezone
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  when: current_zone.stdout != timezone
+  notify: update timezone
+
+- name: Install python-software-properties
+  apt: name=python-software-properties state=present update_cache=yes cache_valid_time={{apt_cache_valid_time}}
+
+- name: Install common dependencies
+  apt: name={{ item }} state=present update_cache=yes cache_valid_time={{apt_cache_valid_time}}
+  with_items: "{{ apt_dependencies }}"

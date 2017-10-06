@@ -1,0 +1,18 @@
+# Hadoop
+hadoop_version: 2.8.1
+hadoop_checksum: 'SHA256:B5BE527578EF2C8565CD435AB4AE71A024CAD704F7BF597BD792082703BD77D9'
+hadoop_user: ubuntu
+hadoop_group: ubuntu
+hadoop_path: /usr/local
+hadoop_home: '{{ hadoop_path }}/hadoop'
+hadoop_user_home: '/home/{{hadoop_user}}'
+hadoop_temp: '{{ hadoop_user_home }}/hadoop/tmp_data'
+hadoop_data: '{{ hadoop_home }}/hadoop_data'
+hadoop_hdfs: '{{ hadoop_data }}/hdfs'
+hadoop_namenode: '{{ hadoop_hdfs }}/namenode'
+hadoop_datanode: '{{ hadoop_hdfs }}/datanode'
+hadoop_replication_number: 3
+
+hadoop_keep_etc_hosts: no
+
+master_host: localhost

@@ -1,0 +1,32 @@
+---
+- name: ensure required packages are installed for Java 8
+  apt: name={{item}} state=latest update_cache=yes
+  with_items:
+    - python-software-properties
+
+- name: Add Java repository to sources
+  action: apt_repository repo='{{apt_java_repo}}'
+
+- name: Autoaccept license for Java
+  action: shell echo {{apt_java_package}} shared/accepted-oracle-license-v1-1 select true | sudo /usr/bin/debconf-set-selections
+
+- name: Update APT package cache
+  action: apt update_cache=yes
+
+- name: Install Java 8
+  action: apt pkg={{apt_java_package}} state=latest install_recommends=yes
+
+- name: Set Java 8 Env
+  action: apt pkg={{apt_set_java_package}} state=latest install_recommends=yes
+
+- name: check Java home
+  shell: update-java-alternatives -l | awk '{ print $3 }'
+  register: java_home
+  ignore_errors: True
+  changed_when: False
+
+- name: set JAVA_HOME in .bashrc
+  lineinfile:
+    dest: '/home/ubuntu/.bashrc'
+    line: 'export JAVA_HOME={{java_home.stdout}}'
+    regexp: '^(# *)?export JAVA_HOME='

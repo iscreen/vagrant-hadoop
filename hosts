@@ -1,0 +1,12 @@
+master ansible_ssh_host=192.168.56.100 ansible_user=ubuntu
+data1 ansible_ssh_host=192.168.56.101 ansible_user=ubuntu
+data2 ansible_ssh_host=192.168.56.102 ansible_user=ubuntu
+data3 ansible_ssh_host=192.168.56.103 ansible_user=ubuntu
+
+[hadoop-node]
+data1
+data2
+data3
+
+[hadoop-master]
+master

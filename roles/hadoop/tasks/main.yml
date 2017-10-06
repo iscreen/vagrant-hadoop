@@ -1,0 +1,153 @@
+
+- include_role:
+    name: java
+
+- name: check Java home
+  shell: update-java-alternatives -l | awk '{ print $3 }'
+  register: java_home
+  ignore_errors: True
+  changed_when: False
+
+- name: set JAVA_HOME in .bashrc
+  lineinfile:
+    dest: '{{ hadoop_user_home }}/.bashrc'
+    line: 'export JAVA_HOME={{java_home.stdout}}'
+    regexp: '^(# *)?export JAVA_HOME='
+
+- shell: if [ -e {{ hadoop_home }} ]; then echo yes; else echo no; fi;
+  register: version_exists
+  check_mode: no
+
+- shell: if [ -f {{ hadoop_user_home }}/hadoop-{{hadoop_version }}.tar.gz ]; then echo yes; else echo no; fi;
+  register: binary_exists
+  check_mode: no
+
+- name: Download hadoop binary
+  get_url:
+    url: http://apache.stu.edu.tw/hadoop/common/hadoop-{{ hadoop_version }}/hadoop-{{ hadoop_version }}.tar.gz
+    dest: '{{ hadoop_user_home }}'
+    # checksum: '{{ hadoop_checksum }}'
+  when: binary_exists.stdout == 'no'
+
+- name: extract hadoop-{{ hadoop_version }} into {{ hadoop_home }}
+  command: '/usr/bin/env tar xf {{ hadoop_user_home }}/hadoop-{{ hadoop_version }}.tar.gz'
+  args:
+    chdir: '{{ hadoop_user_home }}'
+    creates: '{{ hadoop_home }}'
+  become: yes
+  when: version_exists.stdout == 'no'
+
+- name: move hadoop-{{ hadoop_version }} into {{ hadoop_home }}
+  command: '/usr/bin/env mv -f {{ hadoop_user_home }}/hadoop-{{ hadoop_version }} {{ hadoop_home }}'
+  args:
+    creates: '{{ hadoop_home }}'
+  become: yes
+  when: version_exists.stdout == 'no'
+
+- file:
+    path: '{{ hadoop_home }}'
+    recurse: yes
+    owner: '{{ hadoop_user }}'
+    group: '{{ hadoop_group }}'
+
+- name: set HADOOP_HOME in .bashrc
+  lineinfile:
+    dest: '{{ hadoop_user_home }}/.bashrc'
+    line: 'export HADOOP_HOME={{ hadoop_home }}'
+    regexp: '^(# *)?export HADOOP_HOME='
+
+- name: add PATH to HADOOP_HOME/bin in .bashrc
+  lineinfile:
+    dest: '{{ hadoop_user_home }}/.bashrc'
+    line: 'export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin # HADOOP-BIN-PATH'
+    regexp: '# HADOOP-BIN-PATH'
+
+- name: set HADOOP_MAPRED_HOME in .bashrc
+  lineinfile:
+    dest: '{{ hadoop_user_home }}/.bashrc'
+    line: 'export HADOOP_MAPRED_HOME=$HADOOP_HOME'
+    regexp: '^(# *)?export HADOOP_MAPRED_HOME='
+
+- name: set HADOOP_COMMON_HOME in .bashrc
+  lineinfile:
+    dest: '{{ hadoop_user_home }}/.bashrc'
+    line: 'export HADOOP_COMMON_HOME=$HADOOP_HOME'
+    regexp: '^(# *)?export HADOOP_COMMON_HOME='
+
+- name: set HADOOP_HDFS_HOME in .bashrc
+  lineinfile:
+    dest: '{{ hadoop_user_home }}/.bashrc'
+    line: 'export HADOOP_HDFS_HOME=$HADOOP_HOME'
+    regexp: '^(# *)?export HADOOP_HDFS_HOME='
+
+- name: set YARN_HOME in .bashrc
+  lineinfile:
+    dest: '{{ hadoop_user_home }}/.bashrc'
+    line: 'export YARN_HOME=$HADOOP_HOME'
+    regexp: '^(# *)?export  YARN_HOME='
+
+- name: set HADOOP_COMMON_LIB_NATIVE_DIR in .bashrc
+  lineinfile:
+    dest: '{{ hadoop_user_home }}/.bashrc'
+    line: 'export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native'
+    regexp: '^(# *)?export  HADOOP_COMMON_LIB_NATIVE_DIR='
+
+- name: set HADOOP_OPTS in .bashrc
+  lineinfile:
+    dest: '{{ hadoop_user_home }}/.bashrc'
+    line: 'export HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib"'
+    regexp: '^(# *)?export HADOOP_OPTS='
+
+- name: set JAVA_LIBRARY_PATH in .bashrc
+  lineinfile:
+    dest: '{{ hadoop_user_home }}/.bashrc'
+    line: 'export JAVA_LIBRARY_PATH=$HADOOP_HOME/lib/native:$JAVA_LIBRARY_PATH'
+    regexp: '^(# *)?export JAVA_LIBRARY_PATH='
+
+- name: set JAVA_HOME in hadoop-env.sh
+  lineinfile:
+    dest: '{{ hadoop_home }}/etc/hadoop/hadoop-env.sh'
+    line: 'export JAVA_HOME={{ java_home.stdout }}'
+    regexp: '^(# *)?export JAVA_HOME='
+
+- name: install template configurations
+  tags: init
+  template: src={{ item }}.j2 dest={{ hadoop_home }}/etc/hadoop/{{ item }} owner={{hadoop_user}} group={{hadoop_group}} mode=0644
+  with_items:
+    - core-site.xml
+    - hdfs-site.xml
+    - mapred-site.xml
+    - yarn-site.xml
+    # - hadoop-env.sh
+    # - mapred-env.sh
+    # - yarn-env.sh
+
+- name: Build hdoop masters/slaves file
+  template: src={{ item }}.j2 dest={{ hadoop_home }}/etc/hadoop/{{ item }} owner={{hadoop_user}} group={{hadoop_group}} mode=0644
+  when: inventory_hostname == 'master'
+  with_items:
+    - masters
+    - slaves
+  tags: init
+
+- file:
+    path: '{{ hadoop_namenode }}'
+    state: directory
+    owner: '{{ hadoop_user }}'
+    group: '{{ hadoop_group }}'
+  become: yes
+  become_user: '{{ hadoop_user }}'
+
+- file:
+    path: '{{ hadoop_datanode }}'
+    state: directory
+    owner: '{{ hadoop_user }}'
+    group: '{{ hadoop_group }}'
+  become: yes
+  become_user: '{{ hadoop_user }}'
+
+- name: format the namenode
+  shell: creates={{ item }} sudo -u ubuntu {{ hadoop_home }}/bin/hadoop namenode -format -force && touch {{ item }}
+  when: inventory_hostname == 'master'
+  with_items:
+    - '{{ hadoop_home }}/.namenode.formatted'

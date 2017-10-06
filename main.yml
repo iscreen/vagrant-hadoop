@@ -1,0 +1,36 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+  gather_facts: no
+  pre_tasks:
+    - name: 'install python'
+      raw: sudo apt -y install python-simplejson
+  tasks:
+    - name: Build hosts file
+      lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_ssh_host }} {{item}}" state=present
+      when: hostvars[item].ansible_ssh_host is defined
+      with_items: "{{ groups['all'] }}"
+
+- hosts: hadoop-master
+  become: yes
+  become_method: sudo
+  roles:
+    - { role: common, tags: ["init"] }
+    - {
+      role: hadoop,
+      master_host: 'localhost',
+      mapreduce_framework: 'yarn'
+      }
+
+- hosts: hadoop-node
+  become: yes
+  become_method: sudo
+  roles:
+    - { role: common, tags: ["init"] }
+    - {
+      role: hadoop,
+      master_host: 'master'
+      }
+  tags: hadoop-node
+
