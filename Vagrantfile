@@ -7,16 +7,19 @@ Vagrant.configure(2) do |config|
     hadoop_ssh_pem_key = File.read('roles/common/templates/id_rsa')
     hadoop_ssh_pub_key = File.readlines('roles/common/templates/id_rsa.pub').first.strip
 
-    if File.exist?("#{Dir.home}/.ssh/dean.pem.pub")
-      ssh_pub_key = File.readlines("#{Dir.home}/.ssh/dean.pem.pub").first.strip
+    if File.exist?("#{Dir.home}/.ssh/id_rsa.pub")
+      ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
     end
-
-    s.inline = <<-SHELL
-      if ssh_pub_key
+    shell_script = ''
+    unless ssh_pub_key.nil?
+      shell_script = <<-SHELL
         grep -q '#{ssh_pub_key}' .ssh/authorized_keys || echo '#{ssh_pub_key}' >> .ssh/authorized_keys
         grep -q '#{ssh_pub_key}' /root/.ssh/authorized_keys || echo '#{ssh_pub_key}' >> /root/.ssh/authorized_keys
         grep -q '#{ssh_pub_key}' /home/ubuntu/.ssh/authorized_keys || echo '#{ssh_pub_key}' >> /home/ubuntu/.ssh/authorized_keys
-      end
+      SHELL
+    end
+    s.inline = <<-SHELL
+      #{shell_script}
       # hadoop
       grep -q '#{hadoop_ssh_pub_key}' .ssh/authorized_keys || echo '#{hadoop_ssh_pub_key}' >> .ssh/authorized_keys
       grep -q '#{hadoop_ssh_pub_key}' /home/ubuntu/.ssh/authorized_keys || echo '#{hadoop_ssh_pub_key}' >> /home/ubuntu/.ssh/authorized_keys

@@ -1,4 +1,4 @@
-# 說明
+# vagrant-hadoop
 
 Use Vagrant to create Hadoop virtual machines and use Ansible to install all requirement softwares
 
@@ -36,7 +36,7 @@ vagrant provision
 
 * Shutdown VM
 ```
-vagrant stop
+vagrant halt
 ```
 
 * Destroy VM
@@ -52,6 +52,6 @@ You can install software through ansibile cli
 ansible-playbook -i hosts main.yml
 ```
 
-## How to change you SSH keys
+## How to change your SSH keys
 
 Put you ssh private and public keys in roles/common/templates, these keys will deploy to VMs if you want to use yourself.
