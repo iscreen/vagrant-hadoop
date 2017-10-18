@@ -104,6 +104,12 @@
     line: 'export JAVA_LIBRARY_PATH=$HADOOP_HOME/lib/native:$JAVA_LIBRARY_PATH'
     regexp: '^(# *)?export JAVA_LIBRARY_PATH='
 
+- name: set HADOOP_CLASSPATH in .bashrc
+  lineinfile:
+    dest: '{{ hadoop_user_home }}/.bashrc'
+    line: 'export HADOOP_CLASSPATH=${JAVA_HOME}/lib/tools.jar'
+    regexp: '^(# *)?export HADOOP_CLASSPATH='
+
 - name: set JAVA_HOME in hadoop-env.sh
   lineinfile:
     dest: '{{ hadoop_home }}/etc/hadoop/hadoop-env.sh'
