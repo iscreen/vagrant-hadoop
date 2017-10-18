@@ -1,0 +1,47 @@
+- shell: if [ -e {{ scala_home }} ]; then echo yes; else echo no; fi;
+  register: version_exists
+  check_mode: no
+
+- shell: if [ -f {{ scala_user_home }}/{{ scala_version_name }}.tgz ]; then echo yes; else echo no; fi;
+  register: binary_exists
+  check_mode: no
+
+- name: Download scala binary
+  get_url:
+    url: http://www.scala-lang.org/files/archive/{{ scala_version_name }}.tgz
+    dest: '{{ scala_user_home }}/{{ scala_version_name }}.tgz'
+    # checksum: '{{ hadoop_checksum }}'
+  when: binary_exists.stdout == 'no'
+
+- name: extract {{ scala_version_name }} into {{ scala_home }}
+  command: '/usr/bin/env tar xf {{ scala_user_home }}/{{ scala_version_name }}.tgz'
+  args:
+    chdir: '{{ scala_user_home }}'
+    creates: '{{ scala_home }}'
+  become: yes
+  when: version_exists.stdout == 'no'
+
+- name: move {{ scala_version_name }} into {{ scala_home }}
+  command: '/usr/bin/env mv -f {{ scala_user_home }}/{{ scala_version_name }} {{ scala_home }}'
+  args:
+    creates: '{{ scala_home }}'
+  become: yes
+  when: version_exists.stdout == 'no'
+
+- file:
+    path: '{{ scala_home }}'
+    recurse: yes
+    owner: '{{ scala_user }}'
+    group: '{{ scala_group }}'
+
+- name: set SCALA_HOME in .bashrc
+  lineinfile:
+    dest: '{{ scala_user_home }}/.bashrc'
+    line: 'export SCALA_HOME={{ scala_home }}'
+    regexp: '^(# *)?export SCALA_HOME='
+
+- name: add PATH to SCALA_HOME/bin in .bashrc
+  lineinfile:
+    dest: '{{ scala_user_home }}/.bashrc'
+    line: 'export PATH=$PATH:$SCALA_HOME/bin # SCALA-BIN-PATH'
+    regexp: '# SCALA-BIN-PATH'

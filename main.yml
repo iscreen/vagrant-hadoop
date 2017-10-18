@@ -18,10 +18,11 @@
   roles:
     - { role: common, tags: ["init"] }
     - {
-      role: hadoop,
-      master_host: 'localhost',
-      mapreduce_framework: 'yarn'
+        role: hadoop,
+        master_host: 'localhost',
+        mapreduce_framework: 'yarn'
       }
+    - { role: scala }
 
 - hosts: hadoop-node
   become: yes

@@ -1,0 +1,7 @@
+scala_version: 2.12.3
+scala_version_name: "scala-{{ scala_version }}"
+scala_user: ubuntu
+scala_group: ubuntu
+scala_path: /usr/local
+scala_home: '{{ scala_path }}/scala'
+scala_user_home: '/home/{{ scala_user }}'

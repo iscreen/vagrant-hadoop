@@ -84,13 +84,13 @@
   lineinfile:
     dest: '{{ hadoop_user_home }}/.bashrc'
     line: 'export YARN_HOME=$HADOOP_HOME'
-    regexp: '^(# *)?export  YARN_HOME='
+    regexp: '^(# *)?export YARN_HOME='
 
 - name: set HADOOP_COMMON_LIB_NATIVE_DIR in .bashrc
   lineinfile:
     dest: '{{ hadoop_user_home }}/.bashrc'
     line: 'export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native'
-    regexp: '^(# *)?export  HADOOP_COMMON_LIB_NATIVE_DIR='
+    regexp: '^(# *)?export HADOOP_COMMON_LIB_NATIVE_DIR='
 
 - name: set HADOOP_OPTS in .bashrc
   lineinfile:
