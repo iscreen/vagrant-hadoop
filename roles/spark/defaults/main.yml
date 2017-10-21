@@ -1,0 +1,13 @@
+
+spark_version: 2.2.0
+spark_version_name: 'spark-{{ spark_version}}-bin-hadoop2.7'
+spark_archive_file: '{{ spark_version_name }}.tgz'
+spark_download_url: 'https://d3kbcqa49mib13.cloudfront.net/{{ spark_archive_file }}'
+spark_user: ubuntu
+spark_group: ubuntu
+spark_path: /usr/local
+spark_home: '{{ spark_path }}/spark'
+spark_user_home: '/home/{{ spark_user }}'
+
+anaconda_shell_file: 'Anaconda2-5.0.0-Linux-x86_64.sh'
+anaconda_url: 'https://repo.continuum.io/archive/{{ anaconda_shell_file }}'

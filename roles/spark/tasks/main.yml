@@ -1,0 +1,68 @@
+- shell: if [ -e {{ spark_home }} ]; then echo yes; else echo no; fi;
+  register: version_exists
+  check_mode: no
+
+- shell: if [ -f {{ spark_user_home }}/{{ spark_version_name }} ]; then echo yes; else echo no; fi;
+  register: binary_exists
+  check_mode: no
+
+- name: Download spark binary {{ spark_archive_file }}
+  get_url:
+    url: '{{ spark_download_url }}'
+    dest: '{{ spark_user_home }}/{{ spark_archive_file }}'
+    # checksum: '{{ hadoop_checksum }}'
+  when: binary_exists.stdout == 'no'
+
+- name: extract {{ spark_archive_file }} into {{ spark_home }}
+  command: '/usr/bin/env tar xf {{ spark_user_home }}/{{ spark_archive_file }}'
+  args:
+    chdir: '{{ spark_user_home }}'
+    creates: '{{ spark_home }}'
+  become: yes
+  when: version_exists.stdout == 'no'
+
+- name: move {{ spark_version_name }} into {{ spark_home }}
+  command: '/usr/bin/env mv -f {{ spark_user_home }}/{{ spark_version_name }} {{ spark_home }}'
+  args:
+    creates: '{{ spark_home }}'
+  become: yes
+  when: version_exists.stdout == 'no'
+
+- file:
+    path: '{{ spark_home }}'
+    recurse: yes
+    owner: '{{ spark_user }}'
+    group: '{{ spark_group }}'
+
+- name: set SPARK_HOME in .bashrc
+  lineinfile:
+    dest: '{{ spark_user_home }}/.bashrc'
+    line: 'export SPARK_HOME={{ spark_home }}'
+    regexp: '^(# *)?export SPARK_HOME='
+
+- name: add PATH to SPARK_HOME/bin in .bashrc
+  lineinfile:
+    dest: '{{ spark_user_home }}/.bashrc'
+    line: 'export PATH=$PATH:$SPARK_HOME/bin # SPARK-BIN-PATH'
+    regexp: '# SPARK-BIN-PATH'
+
+- name: install log4j template configurations
+  tags: init
+  template: src={{ item }}.j2 dest={{ spark_home }}/conf/{{ item }} owner={{ spark_user }} group={{ spark_group }} mode=0644
+  with_items:
+    - log4j.properties
+    - spark-env.sh
+
+- name: Build spark slaves file
+  template: src={{ item }}.j2 dest={{ spark_home }}/conf/{{ item }} owner={{ spark_user }} group={{ spark_group }} mode=0644
+  when: inventory_hostname == 'master'
+  with_items:
+    - slaves
+  tags: init
+
+- name: Add scripts to home
+  template: src={{ item }}.j2 dest={{ spark_user_home }}/{{ item }} owner={{ spark_user }} group={{ spark_group }} mode=0755
+  when: inventory_hostname == 'master'
+  with_items:
+    - spark-standalone.sh
+  tags: init

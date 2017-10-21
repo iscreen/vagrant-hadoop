@@ -23,6 +23,7 @@
         mapreduce_framework: 'yarn'
       }
     - { role: scala }
+    - { role: spark }
 
 - hosts: hadoop-node
   become: yes
@@ -30,8 +31,10 @@
   roles:
     - { role: common, tags: ["init"] }
     - {
-      role: hadoop,
-      master_host: 'master'
+        role: hadoop,
+        master_host: 'master'
       }
+    - { role: scala }
+    - { role: spark }
   tags: hadoop-node
 
