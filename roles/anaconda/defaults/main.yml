@@ -1,0 +1,5 @@
+anaconda_shell_file: 'Anaconda2-5.0.0-Linux-x86_64.sh'
+anaconda_url: 'https://repo.continuum.io/archive/{{ anaconda_shell_file }}'
+anaconda_user: ubuntu
+anaconda_group: ubuntu
+anaconda_user_home: '/home/{{ anaconda_user }}'

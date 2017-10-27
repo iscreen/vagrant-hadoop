@@ -1,0 +1,51 @@
+- shell: if [ -e {{ anaconda_user_home }}/anaconda2 ]; then echo yes; else echo no; fi;
+  register: version_exists
+  check_mode: no
+
+- shell: if [ -f {{ anaconda_user_home }}/{{ anaconda_shell_file }} ]; then echo yes; else echo no; fi;
+  register: binary_exists
+  check_mode: no
+
+- name: Download anaconda binary {{ anaconda_shell_file }}
+  get_url:
+    url: '{{ anaconda_url }}'
+    dest: '{{ anaconda_user_home }}/{{ anaconda_shell_file }}'
+  when: binary_exists.stdout == 'no'
+
+- name: Install anaconda
+  shell: creates={{ item }} bash {{ anaconda_user_home }}/{{ anaconda_shell_file }} -b && touch {{ item }}
+  when: inventory_hostname == 'master'
+  become: true
+  become_user: '{{ anaconda_user }}'
+  with_items:
+    - '{{ anaconda_user_home }}/.anaconda.installed'
+
+- name: set ANACONDA_HOME in .bashrc
+  lineinfile:
+    dest: '{{ anaconda_user_home }}/.bashrc'
+    line: 'export ANACONDA_HOME={{ anaconda_user_home }}/anaconda2'
+    regexp: '^(# *)?export ANACONDA_HOME='
+
+- name: set ANACONDA_PATH in .bashrc
+  lineinfile:
+    dest: '{{ anaconda_user_home }}/.bashrc'
+    line: 'export ANACONDA_PATH={{ anaconda_user_home }}/anaconda2'
+    regexp: '^(# *)?export ANACONDA_PATH='
+
+- name: add PATH to ANACONDA_PATH/bin in .bashrc
+  lineinfile:
+    dest: '{{ anaconda_user_home }}/.bashrc'
+    line: 'export PATH=$PATH:$ANACONDA_PATH/bin # ANACONDA-BIN-PATH'
+    regexp: '# ANACONDA-BIN-PATH'
+
+- name: set PYSPARK_DRIVER_PYTHON in .bashrc
+  lineinfile:
+    dest: '{{ anaconda_user_home }}/.bashrc'
+    line: 'export PYSPARK_DRIVER_PYTHON=$ANACONDA_PATH/bin/ipython'
+    regexp: '^(# *)?export PYSPARK_DRIVER_PYTHON='
+
+- name: set PYSPARK_PYTHON in .bashrc
+  lineinfile:
+    dest: '{{ anaconda_user_home }}/.bashrc'
+    line: 'export PYSPARK_PYTHON=$ANACONDA_PATH/bin/python'
+    regexp: '^(# *)?export PYSPARK_PYTHON='

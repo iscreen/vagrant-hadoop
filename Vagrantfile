@@ -7,8 +7,8 @@ Vagrant.configure(2) do |config|
     hadoop_ssh_pem_key = File.read('roles/common/templates/id_rsa')
     hadoop_ssh_pub_key = File.readlines('roles/common/templates/id_rsa.pub').first.strip
 
-    if File.exist?("#{Dir.home}/.ssh/id_rsa.pub")
-      ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
+    if File.exist?("#{Dir.home}/.ssh/dean.pem.pub")
+      ssh_pub_key = File.readlines("#{Dir.home}/.ssh/dean.pem.pub").first.strip
     end
     shell_script = ''
     unless ssh_pub_key.nil?
@@ -54,7 +54,7 @@ Vagrant.configure(2) do |config|
     node.vm.hostname = 'master'
     node.vm.network :private_network, ip: '192.168.56.100'
     node.vm.provider 'virtualbox' do |v|
-      v.memory = 1024
+      v.memory = 2048
     end
 
     node.vm.provision 'ansible' do |ansible|
