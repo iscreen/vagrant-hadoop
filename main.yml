@@ -20,10 +20,13 @@
     - {
         role: hadoop,
         master_host: 'localhost',
-        mapreduce_framework: 'yarn'
+        mapreduce_framework: 'yarn',
+        tags: ['hadoop']
       }
-    - { role: scala }
-    - { role: spark }
+    - { role: scala, tags: ['scala'] }
+    - { role: spark, tags: ['spark'] }
+    - { role: anaconda, tags: ['anaconda'] }
+  tags: hadoop-master
 
 - hosts: hadoop-node
   become: yes
@@ -36,5 +39,6 @@
       }
     - { role: scala }
     - { role: spark }
+    - { role: anaconda, tags: ['anaconda'] }
   tags: hadoop-node
 
