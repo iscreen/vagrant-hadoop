@@ -14,7 +14,6 @@
 
 - name: Install anaconda
   shell: creates={{ item }} bash {{ anaconda_user_home }}/{{ anaconda_shell_file }} -b && touch {{ item }}
-  when: inventory_hostname == 'master'
   become: true
   become_user: '{{ anaconda_user }}'
   with_items:
@@ -35,7 +34,7 @@
 - name: add PATH to ANACONDA_PATH/bin in .bashrc
   lineinfile:
     dest: '{{ anaconda_user_home }}/.bashrc'
-    line: 'export PATH=$PATH:$ANACONDA_PATH/bin # ANACONDA-BIN-PATH'
+    line: 'export PATH=$ANACONDA_PATH/bin:$PATH # ANACONDA-BIN-PATH'
     regexp: '# ANACONDA-BIN-PATH'
 
 - name: set PYSPARK_DRIVER_PYTHON in .bashrc
