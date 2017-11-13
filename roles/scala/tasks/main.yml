@@ -2,6 +2,21 @@
   register: version_exists
   check_mode: no
 
+- name: Get local dir
+  local_action: shell pwd
+  register: playbook_path_output
+  become: no
+- debug: var=playbook_path_output.stdout
+
+- name: Checking {{ scala_version_name }}.tgz file is exist in local sources
+  local_action: stat path={{ playbook_path_output.stdout }}/sources/{{ scala_version_name }}.tgz
+  register: scala_file
+  become: no
+
+- name: Copy {{ scala_version_name }}.tgz file if local exists
+  copy: src={{ playbook_path_output.stdout }}/sources/{{ scala_version_name }}.tgz dest={{ scala_user_home }}
+  when: scala_file.stat.exists
+
 - shell: if [ -f {{ scala_user_home }}/{{ scala_version_name }}.tgz ]; then echo yes; else echo no; fi;
   register: binary_exists
   check_mode: no

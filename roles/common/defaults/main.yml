@@ -4,4 +4,6 @@ apt_dependencies:
   - htop
   - ntp
   - unzip
+  - zip
   - rsync
+  - default-jdk

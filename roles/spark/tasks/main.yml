@@ -2,7 +2,22 @@
   register: version_exists
   check_mode: no
 
-- shell: if [ -f {{ spark_user_home }}/{{ spark_version_name }} ]; then echo yes; else echo no; fi;
+- name: Get local dir
+  local_action: shell pwd
+  register: playbook_path_output
+  become: no
+- debug: var=playbook_path_output.stdout
+
+- name: Checking {{playbook_path_output.stdout}}/sources/{{ spark_archive_file }} file is exist in local sources
+  local_action: stat path={{ playbook_path_output.stdout }}/sources/{{ spark_archive_file }}
+  register: spark_file
+  become: no
+
+- name: Copy {{playbook_path_output.stdout}}/sources/{{ spark_archive_file }} file if local exists
+  copy: src={{ playbook_path_output.stdout }}/sources/{{ spark_archive_file }} dest={{ spark_user_home }}
+  when: spark_file.stat.exists
+
+- shell: if [ -f {{ spark_user_home }}/{{ spark_archive_file }} ]; then echo yes; else echo no; fi;
   register: binary_exists
   check_mode: no
 

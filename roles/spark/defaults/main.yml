@@ -1,8 +1,9 @@
 
-spark_version: 2.2.0
-spark_version_name: 'spark-{{ spark_version}}-bin-hadoop2.7'
+spark_version: 2.0.2
+spark_version_name: 'spark-{{ spark_version}}-bin-hadoop2.6'
 spark_archive_file: '{{ spark_version_name }}.tgz'
 spark_download_url: 'https://d3kbcqa49mib13.cloudfront.net/{{ spark_archive_file }}'
+# spark_download_url: 'http://apache.stu.edu.tw/spark/spark-{{ spark_version }}/{{ spark_archive_file }}'
 spark_user: ubuntu
 spark_group: ubuntu
 spark_path: /usr/local

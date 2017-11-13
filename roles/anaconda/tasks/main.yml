@@ -2,6 +2,21 @@
   register: version_exists
   check_mode: no
 
+- name: Get local dir
+  local_action: shell pwd
+  register: playbook_path_output
+  become: no
+- debug: var=playbook_path_output.stdout
+
+- name: Checking anaconda is exist in local sources
+  local_action: stat path={{ playbook_path_output.stdout }}/sources/{{ anaconda_shell_file }}
+  register: anaconda_file
+  become: no
+
+- name: Copy anaconda file if it exists
+  copy: src={{ playbook_path_output.stdout }}/sources/{{ anaconda_shell_file }} dest={{ anaconda_user_home }}
+  when: anaconda_file.stat.exists
+
 - shell: if [ -f {{ anaconda_user_home }}/{{ anaconda_shell_file }} ]; then echo yes; else echo no; fi;
   register: binary_exists
   check_mode: no

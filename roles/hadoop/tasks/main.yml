@@ -1,6 +1,6 @@
 
-- include_role:
-    name: java
+# - include_role:
+#     name: java
 
 - name: check Java home
   shell: update-java-alternatives -l | awk '{ print $3 }'
@@ -18,19 +18,34 @@
   register: version_exists
   check_mode: no
 
-- shell: if [ -f {{ hadoop_user_home }}/hadoop-{{hadoop_version }}.tar.gz ]; then echo yes; else echo no; fi;
+- name: Get local dir
+  local_action: shell pwd
+  register: playbook_path_output
+  become: no
+- debug: var=playbook_path_output.stdout
+
+- name: Checking {{ hadoop_archive_file }} file is exist in local sources
+  local_action: stat path={{ playbook_path_output.stdout }}/sources/{{ hadoop_archive_file }}
+  become: no
+  register: hadoop_file
+
+- name: Copy {{ hadoop_archive_file }} file if it exists
+  copy: src={{ playbook_path_output.stdout }}/sources/{{ hadoop_archive_file }} dest={{ hadoop_user_home }}
+  when: hadoop_file.stat.exists
+
+- shell: if [ -f {{ hadoop_user_home }}/{{ hadoop_archive_file }} ]; then echo yes; else echo no; fi;
   register: binary_exists
   check_mode: no
 
 - name: Download hadoop binary
   get_url:
-    url: http://apache.stu.edu.tw/hadoop/common/hadoop-{{ hadoop_version }}/hadoop-{{ hadoop_version }}.tar.gz
+    url: http://apache.stu.edu.tw/hadoop/common/hadoop-{{ hadoop_version }}/{{ hadoop_archive_file }}
     dest: '{{ hadoop_user_home }}'
     # checksum: '{{ hadoop_checksum }}'
   when: binary_exists.stdout == 'no'
 
-- name: extract hadoop-{{ hadoop_version }} into {{ hadoop_home }}
-  command: '/usr/bin/env tar xf {{ hadoop_user_home }}/hadoop-{{ hadoop_version }}.tar.gz'
+- name: extract {{ hadoop_archive_file }} into {{ hadoop_home }}
+  command: '/usr/bin/env tar xf {{ hadoop_user_home }}/{{ hadoop_archive_file }}'
   args:
     chdir: '{{ hadoop_user_home }}'
     creates: '{{ hadoop_home }}'
@@ -97,6 +112,12 @@
     dest: '{{ hadoop_user_home }}/.bashrc'
     line: 'export HADOOP_OPTS="-Djava.library.path=$HADOOP_HOME/lib"'
     regexp: '^(# *)?export HADOOP_OPTS='
+
+- name: set LD_LIBRARY_PATH in .bashrc
+  lineinfile:
+    dest: '{{ hadoop_user_home }}/.bashrc'
+    line: 'export LD_LIBRARY_PATH=$HADOOP_COMMON_LIB_NATIVE_DIR:$LD_LIBRARY_PATH'
+    regexp: '^(# *)?export LD_LIBRARY_PATH='
 
 - name: set JAVA_LIBRARY_PATH in .bashrc
   lineinfile:
